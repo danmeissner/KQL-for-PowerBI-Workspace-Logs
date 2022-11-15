@@ -1,0 +1,14 @@
+// Pareto of slowest Visuals by CPUTime across all reports in Workspace
+PowerBIDatasetsWorkspace
+| where OperationName == 'QueryEnd'
+    and CpuTimeMs > 10000
+| extend a = todynamic(ApplicationContext)
+| extend
+    VisualID = a.Sources[0].VisualId,
+    ReportID = a.Sources[0].ReportId,
+    DatasetName = ArtifactName
+| where isnotempty(VisualID) 
+    and isnotempty(ReportID)
+| summarize event_count=count() by PowerBIWorkspaceName, DatasetName, tostring(ReportID), tostring(VisualID)
+| top 25 by event_count
+| render table //| render columnchart
